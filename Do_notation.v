@@ -26,7 +26,7 @@ Class Monad (M:Type -> Type) := {
   Monad_Pointed :> Pointed M
 }.
 
-Generalizable Variables A B C D M.
+Generalizable Variables M.
 (*Instance Monad_Return `{Monad M}: Pointed M :=
 { point := fun A a => mreturn a }.
 

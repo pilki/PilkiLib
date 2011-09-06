@@ -1,9 +1,9 @@
-Require Export Coqlib_compcert.
+Require Export Coqlib.
 Require Import RelationClasses.
 Require Export Case_Tactics.
 Require Export Program.
 Create HintDb clean.
-Generalizable Variable A B.
+Global Generalizable Variable A B C D.
 
 (*Implicit Arguments fst [[A] [B]].
 Implicit Arguments snd [[A] [B]].*)

@@ -17,7 +17,7 @@ Instance Inhabited_pos : Inhabited positive := {repr := 1%positive}.
 Instance Inhabited_option A : Inhabited (option A) := {repr := None}.
 
 
-Generalizable Variable A B M.
+Generalizable Variable M.
 
 Instance Inhabited_pair `{Inhabited A} `{Inhabited B} : Inhabited (A * B) :=
 {repr := (repr, repr)}.

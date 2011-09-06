@@ -13,7 +13,7 @@ COQEXEC=coqtop $(INCLUDES) -batch -load-vernac-source
 VPATH=$(DIRS)
 GPATH=$(DIRS)
 
-SRC=ClassesAndNotations.v  Coqlibext.v  Do_notation.v Coqlib_compcert.v
+SRC=ClassesAndNotations.v  Coqlibext.v  Do_notation.v Coqlib.v
 
 FILES=$(SRC)
 
