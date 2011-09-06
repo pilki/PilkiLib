@@ -9,17 +9,17 @@ Require Import RelationClasses.
 Class Inhabited (A:Type) :=
 {repr :A}.
 
-Instance Inhab_nat : Inhabited nat := {repr := O%nat}.
-Instance Inhab_Z : Inhabited Z := {repr := 0%Z}.
-Instance Inhab_N : Inhabited N := {repr := 0%N}.
-Instance Inhab_bool : Inhabited bool := {repr := false}.
-Instance Inhab_pos : Inhabited positive := {repr := 1%positive}.
-Instance Inhab_option A : Inhabited (option A) := {repr := None}.
+Instance Inhabited_nat : Inhabited nat := {repr := O%nat}.
+Instance Inhabited_Z : Inhabited Z := {repr := 0%Z}.
+Instance Inhabited_N : Inhabited N := {repr := 0%N}.
+Instance Inhabited_bool : Inhabited bool := {repr := false}.
+Instance Inhabited_pos : Inhabited positive := {repr := 1%positive}.
+Instance Inhabited_option A : Inhabited (option A) := {repr := None}.
 
 
 Generalizable Variable A B M.
 
-Instance Inhab_pair `{Inhabited A} `{Inhabited B} : Inhabited (A * B) :=
+Instance Inhabited_pair `{Inhabited A} `{Inhabited B} : Inhabited (A * B) :=
 {repr := (repr, repr)}.
 
 Definition unsafe_hd `{Inhabited A} (l: list A) :=
@@ -111,12 +111,13 @@ Program Instance EqASDecOption `{EqASDec A}: EqASDec (option A) :=
       if a ≡? b then left _ else right _
   end}.
 
-(* Type class for decidable equality *)
 
+(* Type class for decidable equality *)
 Class EqDec (A:Type) := {
   eq_dec: forall (x y:A), {x = y} + {x <> y}
 }.
 
+(* we usually don't compute, juste destruct *)
 Global Opaque eq_dec.
 
 
@@ -260,6 +261,8 @@ Tactic Notation "dest" "≡?" :=
     | |-  context[?X ≡? ?Y]  => dest X ≡? Y
   end.
 
+
+
 Fixpoint eq_list `{EqDec A} (l1 l2: list A) : bool :=
   match l1, l2 with
     | nil, nil => true
@@ -267,8 +270,6 @@ Fixpoint eq_list `{EqDec A} (l1 l2: list A) : bool :=
     | x1::l1', x2::l2' =>
       (x1 == x2) && eq_list l1' l2'
   end.
-
-
 
 Program Instance EqDec_list: forall `(EqDec A), EqDec (list A):=
 { eq_dec := fun l1 l2 =>
@@ -336,9 +337,9 @@ Hint Rewrite @dec_eq_false using (first [assumption | apply not_eq_sym; assumpti
 
 
 
+
 (* this class is used to differentiate types. Simple type aliases are
    some times weak for that since they pollute all the name space *)
-
 
 Class singletonInd (ind cont: Type) :=
 { open: ind -> cont;
@@ -364,5 +365,3 @@ Qed.
 Next Obligation.
   intro EQ. congruence.
 Qed.
-
-

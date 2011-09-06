@@ -13,13 +13,13 @@ Set Implicit Arguments.
 
 Ltac inv H := inversion H; try subst; try clear H.
 
-Definition decidable (P:Prop) := {P} + {~P}.
-Hint Unfold decidable: autounfold.
+Definition Decidable (P:Prop) := {P} + {~P}.
+Hint Unfold Decidable: autounfold.
 
 (** the hint base autounfold allows to register definition that should
    often be automatically unfolded*)
 
-Ltac un := autounfold with autounfold in *.
+Tactic Notation "unfold*" := autounfold with autounfold in *.
 
 
 (** [list_forall P [x1 ... xN] holds iff [P xi] holds for all [i]. *)
@@ -52,7 +52,7 @@ Section FORALL.
   Qed.
   Variables l1 l2: list A.
 
-  Lemma list_forall_app1: list_forall (l1 ++ l2) -> list_forall l1.
+  Lemma list_forall_app_list_forall_l: list_forall (l1 ++ l2) -> list_forall l1.
   Proof.
     induction l1; simpl.
 
@@ -60,7 +60,7 @@ Section FORALL.
     intros. inv H. constructor; auto.
   Qed.
 
-  Lemma list_forall_app2: list_forall (l1 ++ l2) -> list_forall l2.
+  Lemma list_forall_app_list_forall_r: list_forall (l1 ++ l2) -> list_forall l2.
   Proof.
     induction l1; simpl.
 
@@ -68,7 +68,7 @@ Section FORALL.
     intros. inv H; auto.
   Qed.
 
-  Lemma app_list_forall: list_forall l1 -> list_forall l2 -> list_forall (l1 ++ l2).
+  Lemma list_forall_list_forall_app: list_forall l1 -> list_forall l2 -> list_forall (l1 ++ l2).
   Proof.
     intros LFA1 LFA2.
     induction l1; simpl; auto.
@@ -79,14 +79,14 @@ Section FORALL.
 End FORALL.
 
 
-Fixpoint list_forallb {A:Type} f (l: list A) :=
+Fixpoint list_forallb {A:Type} f (l: list A) : bool:=
   match l with
     | nil => true
     | x :: l' =>
       (f x) && (list_forallb f l')
   end.
 
-Lemma list_forallb_correct: forall A f (P: A -> Prop) (l: list A),
+Lemma list_forallb_list_forall: forall A f (P: A -> Prop) (l: list A),
   (forall a, f a = true -> P a) ->
   list_forallb f l = true -> list_forall P l.
 Proof.
@@ -97,6 +97,19 @@ Proof.
   destruct (f a); auto.
 Qed.
 
+Lemma list_forall_list_forallb: forall A f (P: A -> Prop) (l: list A),
+  (forall a, P a -> f a = true) ->
+  list_forall P l -> list_forallb f l = true.
+Proof.
+  intros A f P l Ptrue LF.
+  induction' l.
+  Case "@nil".
+    reflexivity.
+  Case "cons".
+    inv LF.
+    simpl. rewrite andb_true_iff. auto.
+Qed.
+
 
 Lemma list_forall_imply: forall (A:Type) (P Q: A -> Prop) (l: list A),
   (forall a, P a -> Q a) -> list_forall P l -> list_forall Q l.
@@ -105,14 +118,14 @@ Proof.
   induction H0; auto using list_forall_cons, list_forall_nil.
 Qed.
 
-Lemma list_forall_map1 {A B} (l:list A) (f: A -> B) (P: A -> Prop) (Q: B -> Prop):
+Lemma list_forall_map_list_forall {A B} (l:list A) (f: A -> B) (P: A -> Prop) (Q: B -> Prop):
   (forall a, Q (f a) -> P a) ->
   list_forall Q (map f l) -> list_forall P l.
 Proof.
  intro IMP. induction l; simpl; intro H; inv H; constructor; auto.
 Qed.
 
-Lemma list_forall_map2 {A B} (l:list A) (f: A -> B) (P: A -> Prop) (Q: B -> Prop):
+Lemma list_forall_list_forall_map {A B} (l:list A) (f: A -> B) (P: A -> Prop) (Q: B -> Prop):
   (forall a, P a -> Q (f a)) -> list_forall P l  ->
   list_forall Q (map f l).
 Proof.
@@ -121,14 +134,14 @@ Qed.
 
 Hint Constructors list_forall.
 
-Program Definition forallP A P Q (f: forall a:A, {P a} + {Q a}) l :
+Program Definition list_forall_semi_dec A P Q (f: forall a:A, {P a} + {Q a}) l :
   {list_forall P l} + {True} :=
   match list_forallb f l with
     | true => left _
     | false => right _
   end.
 Next Obligation.
-  apply list_forallb_correct with (f := f); auto.
+  apply list_forallb_list_forall with (f := f); auto.
   intros. destruct (f a); simpl in *; auto. inv H.
 Qed.
 
@@ -167,11 +180,11 @@ Ltac inv_opt :=
 
 
 (* a type to do rewriting only in the environement *)
-Inductive imp_rew (P1 P2: Prop) : Prop:=
-  | IR : (P1 -> P2) -> imp_rew P1 P2.
-Hint Constructors imp_rew.
+Inductive imp_rewrite (P1 P2: Prop) : Prop:=
+  | imp_rewrite_intro : (P1 -> P2) -> imp_rewrite P1 P2.
+Hint Constructors imp_rewrite.
 
-Notation " A '-r>' B" := (imp_rew A B) (at level 90).
+Notation " A '-r>' B" := (imp_rewrite A B) (at level 90).
 
 Lemma ir_refl: forall A, A -r> A.
 Proof.
@@ -183,12 +196,12 @@ Proof.
   intuition.
 Qed.
 
-Add Relation Prop imp_rew
+Add Relation Prop imp_rewrite
   reflexivity proved by ir_refl
   transitivity proved by ir_trans
-  as imp_rewSetoid.
+  as imp_rewriteSetoid.
 
-Instance imp_rew_sub: subrelation imp_rew impl.
+Instance imp_rewrite_sub: subrelation imp_rewrite impl.
 Proof.
   compute.
   intuition.
@@ -196,7 +209,7 @@ Qed.
 
 
 Inductive is_some {A:Type}: (option A)-> Prop :=
-| IsSome: forall a:A, is_some (Some a).
+| is_some_intro: forall a:A, is_some (Some a).
 
 Hint Constructors is_some.
 
@@ -211,7 +224,12 @@ Lemma is_some_None {A:Type}:
   is_some (@None A) -r> False.
 Proof. intuition. inversion H. Qed.
 
-Hint Rewrite @is_some_Some @is_some_None: clean.
+
+Lemma remove_Some: forall A (a b:A), Some a = Some b -r> a = b.
+Proof.
+  intuition. inv H. reflexivity.
+Qed.
+Hint Rewrite @is_some_Some @is_some_None remove_Some: clean.
 
 (** the clean database must be used for rewrite lemmas that simplifies
    the hypothethis *)
@@ -220,11 +238,11 @@ Ltac solve_is_some :=
   intros;
   match goal with
     | H : is_some None |- _ => inv H
-    | |- is_some (Some ?x) => apply IsSome
+    | |- is_some (Some ?x) => apply is_some_intro
     | H : ?X = Some ?Y |- is_some ?X =>
-      rewrite H; apply IsSome
+      rewrite H; apply is_some_intro
     | H : Some ?Y = ?X |- is_some ?X =>
-      rewrite <- H; apply IsSome
+      rewrite <- H; apply is_some_intro
   end; fail.
 
 
@@ -303,14 +321,11 @@ Hint Extern 5 => solve_contradiction.
 
 
 Create HintDb optional_inv.
-Lemma type_of_JMeq_eq: forall A B (a:A) (b:B), a ~=b -> A = B.
-Proof.
-  intros. inv H. reflexivity.
-Qed.
-
-(* tag an hypothethis, saying it should be inverted *)
+(* tag an hypothethis, saying it should be inverted, and its inversion
+   can only produce one new subgoal*)
 Definition TAG_INV {P} (p:P) := p.
 Notation "'tag_to_inv' ( X )" := (X -r> TAG_INV ( X )%type) (at level 0, only parsing).
+
 (* allows several subgoals to be produced *)
 Definition TAG_INV_MULTI {P} (p:P) := p.
 Notation "'tag_to_inv_multi' ( X )" := (X -r> TAG_INV_MULTI ( X )%type) (at level 0, only parsing).
@@ -318,7 +333,7 @@ Notation "'tag_to_inv_multi' ( X )" := (X -r> TAG_INV_MULTI ( X )%type) (at leve
 Ltac optional_inv_aux H :=
   progress (autorewrite with optional_inv in H);
   match type of H with
-    | TAG_INV _ => inv H; [idtac]
+    | TAG_INV _ => inv H; [idtac] (* ensures only one subgoal has been produced *)
     | TAG_INV_MULTI _ => inv H
   end.
 
@@ -347,6 +362,8 @@ Ltac revert_all_of_type A :=
     | H : A |- _ => revert dependent H
   end.
 
+
+(* a mark to put in the goal, to know up to where to intro *)
 Inductive _MARK_:Prop := MARK.
 
 Ltac pose_mark :=
@@ -355,14 +372,44 @@ Ltac pose_mark :=
 Ltac intros_until_mark :=
   repeat
   (match goal with
-     | H : _MARK_ |- _ => fail 1
-     | _ => idtac
+     | H : _MARK_ |- _ => fail 1 (* if a mark has been introduced, stop *)
+     | _ => idtac (* else continue to introduce *)
    end; intro);
   (match goal with
      | H : _MARK_ |- _ => clear H
      | _ => idtac
    end)
   .
+
+
+Lemma type_of_JMeq_eq: forall A B (a:A) (b:B), a ~=b -> A = B.
+Proof.
+  intros. inv H. reflexivity.
+Qed.
+
+Lemma inj_pairT2_rewrite :
+  forall U (P:U -> Type) (p:U) (x y:P p),
+    existT P p x = existT P p y -r> x = y.
+Proof.
+  constructor.
+  apply inj_pairT2.
+Qed.
+
+
+Lemma inj_pairT2_hetero:
+  forall U (P:U -> Type) (p1 p2:U) (x:P p1) (y: P p2),
+    p1 = p2 ->
+    existT P p1 x = existT P p2 y -r> x ~= y.
+Proof.
+  intros * EQ.
+  subst. constructor.
+  intro. apply inj_pairT2 in H. subst. constructor.
+Qed.
+
+
+
+Hint Rewrite inj_pairT2_hetero using (auto; congruence): clean.
+Hint Rewrite inj_pairT2_rewrite: clean.
 
 
 Ltac normalize_env_aux :=
@@ -415,6 +462,8 @@ Tactic Notation "dest_if_aux" constr(TERM) "as" simple_intropattern(pat):=
 Tactic Notation "dest_if_aux" constr(TERM) :=
   dest_if_aux TERM as [].
 
+
+(* destruct if in a given hypothethis*)
 Tactic Notation "dest_if" "in" hyp(H) "as" simple_intropattern(pat) :=
   let TERM := type of H in
    dest_if_aux TERM as pat.
@@ -422,28 +471,34 @@ Tactic Notation "dest_if" "in" hyp(H) "as" simple_intropattern(pat) :=
 Tactic Notation "dest_if" "in" hyp(H) :=
   dest_if in H as [].
 
+(* destruct an in in any hypothethis *)
 Tactic Notation "dest_if" "as" simple_intropattern(pat) :=
   match goal with
     | H : ?TERM |- _ => dest_if_aux TERM as pat
   end.
 Tactic Notation "dest_if" := dest_if as [].
 
+
+(* destruct an if in the goal *)
 Tactic Notation "dest_if_goal" "as" simple_intropattern(pat) :=
   match goal with
     | |- ?TERM => dest_if_aux TERM as pat
   end.
-
 Tactic Notation "dest_if_goal" := dest_if_goal as [].
 
 
+
 Tactic Notation "inv_clean" hyp(H) := inv H; clean.
-(* this one often doesn't work *)
+
+(* this one often doesn't work because inv generate a number of
+   subgoals that is different from the number of constructors of H*)
 Tactic Notation "inv'" hyp(H) := cases H (inv H).
 Tactic Notation "inv_clean'" hyp(H) := inv' H; clean.
 
 
 
-Definition unsafe_tail {A} (l:list A) :=
+
+Definition unsafe_tail `(l:list A) :=
   match l with
     | nil => nil
     | _ :: t => t
@@ -455,18 +510,13 @@ Fixpoint last `(l: list A) :=
     | [x] => Some x
     | _ :: l' => last l'
   end.
+
 Lemma last_is_some `(l: list A): length l <> O -> is_some (last l).
 Proof.
   induction' l; intros NOTNIL; simpl in *; auto.
   Case "cons".
   destruct l; auto.
 Qed.
-
-Lemma remove_Some: forall A (a b:A), Some a = Some b -r> a = b.
-Proof.
-  intuition. inv H. reflexivity.
-Qed.
-Hint Rewrite remove_Some: clean.
 
 Lemma last_is_last `(l: list A) x: last l = Some x -> exists l', l = l' ++ [x].
 Proof.
@@ -480,37 +530,12 @@ Proof.
   exists (a::l'). simpl. auto.
 Qed.
 
-Lemma inj_pairT2_rewrite :
-  forall U (P:U -> Type) (p:U) (x y:P p),
-    existT P p x = existT P p y -r> x = y.
-Proof.
-  constructor.
-  apply inj_pairT2.
-Qed.
-
-
-Lemma inj_pairT2_hetero:
-  forall U (P:U -> Type) (p1 p2:U) (x:P p1) (y: P p2),
-    p1 = p2 ->
-    existT P p1 x = existT P p2 y -r> x ~= y.
-Proof.
-  intros * EQ.
-  subst. constructor.
-  intro. apply inj_pairT2 in H. subst. constructor.
-Qed.
-
-
-
-Hint Rewrite inj_pairT2_hetero using (auto; congruence): clean.
-Hint Rewrite inj_pairT2_rewrite: clean.
-
-
 
 
 
 (* Not empty lists *)
 Definition not_empty_list A := (A * list A)%type.
-Definition ne_map {A B} (f: A -> B) (nel:not_empty_list A) : not_empty_list B:=
+Definition not_empty_map {A B} (f: A -> B) (nel:not_empty_list A) : not_empty_list B:=
   let (a, l) := nel in
   (f a, map f l).
 

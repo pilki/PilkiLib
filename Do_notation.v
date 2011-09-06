@@ -471,9 +471,7 @@ Proof.
   constructor; auto.
 Qed.
 
-
-
-Definition ne_mmap {M} {MON:Monad M} (*{PTD:Pointed M}*) {A B: Type} (f: A -> M B) (l: not_empty_list A)
+Definition not_empty_mmap {M} {MON:Monad M} (*{PTD:Pointed M}*) {A B: Type} (f: A -> M B) (l: not_empty_list A)
   : M (not_empty_list B) :=
   let (hd, tl) := l in
   do{;
