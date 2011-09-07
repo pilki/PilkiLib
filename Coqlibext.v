@@ -19,7 +19,7 @@ Hint Unfold Decidable: autounfold.
 (** the hint base autounfold allows to register definition that should
    often be automatically unfolded*)
 
-Tactic Notation "unfold*" := autounfold with autounfold in *.
+Tactic Notation "unfold" "*" := autounfold with autounfold in *.
 
 
 (** [list_forall P [x1 ... xN] holds iff [P xi] holds for all [i]. *)
@@ -77,6 +77,23 @@ Section FORALL.
   Qed.
 
 End FORALL.
+
+Fixpoint repeat {B: Type} (m: nat) (b:B) :=
+  match m with
+    | O => nil
+    | S m' => b :: (repeat m' b)
+  end.
+Lemma repeat_length: forall B m (b:B),
+  length (repeat m b) = m.
+Proof.
+  induction m; simpl; intros; auto.
+Qed.
+
+Lemma repeat_eq_forall: forall `(a:A) n,
+  list_forall (fun x => x = a) (repeat n a).
+Proof.
+  intros; induction n; constructor; auto.
+Qed.
 
 
 Fixpoint list_forallb {A:Type} f (l: list A) : bool:=
@@ -535,6 +552,10 @@ Qed.
 
 (* Not empty lists *)
 Definition not_empty_list A := (A * list A)%type.
+Hint Unfold not_empty_list:aliases.
+Definition not_empty_list_forall A P (l: not_empty_list A) :=
+  list_forall P (fst l::snd l).
+Hint Unfold not_empty_list_forall: autounfold.
 Definition not_empty_map {A B} (f: A -> B) (nel:not_empty_list A) : not_empty_list B:=
   let (a, l) := nel in
   (f a, map f l).

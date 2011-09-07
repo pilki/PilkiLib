@@ -480,6 +480,15 @@ Definition not_empty_mmap {M} {MON:Monad M} (*{PTD:Pointed M}*) {A B: Type} (f: 
     point (nhd, ntl)
   }.
 
+Lemma mmap_inv {A B} (l: list A) (f: A -> B) (g: B -> option A):
+  (forall a, g (f a) = Some a) ->
+  mmap g (map f l) = Some l.
+Proof.
+  intro INV.
+  induction l; simpl; auto.
+  rewrite INV. rewrite IHl. simpl_do. auto.
+Qed.
+
 
 Goal (
   do x <- Some 1;
