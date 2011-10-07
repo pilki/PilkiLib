@@ -1,7 +1,7 @@
 My general purpose Coq library
 
-Some classes
+The file Coqlib.v is directly from compcert ((c) Xavier Leroy and al)
 
-Do notations
-
-Some tactics
+All the code is distributed under the terms of the GNU General Public
+License as published by the Free Software Foundation, either version 2
+of the License, or (at your option) any later version.
