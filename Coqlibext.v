@@ -10,6 +10,7 @@ Require Export Coqlib.
 Require Import RelationClasses.
 Require Export Case_Tactics.
 Require Export Program.
+Require Import Sorting.Permutation.
 Create HintDb clean.
 Global Generalizable Variable A B C D.
 
@@ -85,6 +86,41 @@ Section FORALL.
   Qed.
 
 End FORALL.
+Hint Constructors list_forall.
+
+Fixpoint list_forall_b {A} {P : A -> Prop} (p: forall a, {P a}+{~P a}) l
+  : bool :=
+  match l with
+  | [] => true
+  | a :: l' =>
+    if p a then list_forall_b p l' else false
+  end.
+
+Lemma list_forall_b_correct A (P : A -> Prop) (p: forall a, {P a}+{~P a}) l:
+  list_forall_b p l = true <-> list_forall P l.
+Proof.
+  induction' l as [|a l].
+  Case "@nil".
+    intuition.
+  Case "cons a l".
+    destruct IHl.
+    simpl; split; intro; destruct (p a); inv H1 ; auto using list_forall_cons.
+Qed.
+
+
+Program Definition list_forall_dec {A} {P : A -> Prop} (p: forall a, {P a}+{~P a}) l
+  : {list_forall P l}+{~list_forall P l}:=
+  match list_forall_b p l with
+    | true => left _
+    | false => right _
+  end.
+Next Obligation.
+  rewrite <- list_forall_b_correct; eauto.
+Qed.
+Next Obligation.
+  intro H. rewrite <- list_forall_b_correct in H. rewrite H in Heq_anonymous.
+  inv Heq_anonymous.
+Qed.
 
 Fixpoint repeat {B: Type} (m: nat) (b:B) :=
   match m with
@@ -157,7 +193,6 @@ Proof.
  intro IMP. induction l; simpl; intro H; inv H; constructor; auto.
 Qed.
 
-Hint Constructors list_forall.
 
 Program Definition list_forall_semi_dec A P Q (f: forall a:A, {P a} + {Q a}) l :
   {list_forall P l} + {True} :=
@@ -255,6 +290,34 @@ Proof.
   intuition. inv H. reflexivity.
 Qed.
 Hint Rewrite @is_some_Some @is_some_None remove_Some: clean.
+
+Lemma remove_S: forall (a b:nat), S a = S b -r> a = b.
+Proof.
+  intuition.
+Qed.
+Hint Rewrite remove_S: clean.
+
+Lemma Permutation_nil_l_rew : forall `(l : list A), Permutation [] l -r> l = [].
+Proof. constructor. apply Permutation_nil. Qed.
+  
+Lemma Permutation_nil_r_rew: forall `(l : list A), Permutation l [] -r> l = [].
+Proof. constructor. intro. symmetry in H. apply Permutation_nil. assumption. Qed.
+  
+
+Lemma Permutation_nil_cons_rew1:
+  forall `(l : list A) (x : A),Permutation nil (x::l) -r> False.
+Proof. constructor. apply Permutation_nil_cons. Qed.
+Lemma Permutation_nil_cons_rew2:
+  forall `(l : list A) (x : A),Permutation (x::l) nil -r> False.
+Proof.
+  constructor. intro. symmetry in H. apply Permutation_nil_cons in H.
+  assumption.
+Qed.
+
+Hint Rewrite @Permutation_nil_l_rew @Permutation_nil_r_rew
+  @Permutation_nil_cons_rew1 @Permutation_nil_cons_rew2:clean.
+
+
 
 (** the clean database must be used for rewrite lemmas that simplifies
    the hypothethis *)
@@ -448,7 +511,14 @@ Ltac normalize_env_aux :=
         pose_mark;
         revert_all_of_type A;
         subst; intros_until_mark; apply JMeq_eq in H
+      | H1 : ?P
+      , H2 : ?P |- _ =>
+        match type of P with
+          | Prop =>
+            first [clear H1| clear H2]
+        end
     end.
+
 
 Ltac normalize_env :=
   clean in * |-; normalize_env_aux.
@@ -459,7 +529,7 @@ Tactic Notation "clean" :=
   normalize_env_aux;
   option_on_right;
   try solve_contradiction;
-  subst; auto)).
+  try subst; auto)).
 
 Tactic Notation "clean" "no" "auto" :=
   repeat (progress (
@@ -612,6 +682,42 @@ Qed.
 
 
 
+Implicit Arguments app [[A]].
+
+Definition flatten {A} (ll: list (list A)) : list A:=
+  fold_right app [] ll.
+
+Goal flatten [[];[1;2;3;4];[5;6];[];[7;8]] = [1;2;3;4;5;6;7;8]. reflexivity. Qed.
+Goal forall X, @flatten X [] = []. reflexivity. Qed.
+(* yes, this is my proof of correction :) *)
+
+  Lemma Forall_app A (P: A -> Prop) l1 l2:
+    Forall P l1 -> Forall P l2 ->
+    Forall P (l1 ++ l2).
+  Proof.
+    intros F1 F2; induction F1; simpl; eauto.
+  Qed.
+
+  Lemma Forall_flatten A (P: A -> Prop) l:
+    Forall (Forall P) l ->
+    Forall P (flatten l).
+  Proof.
+    induction l; intros FF; simpl;
+    inv FF; eauto using Forall_app.
+  Qed.
+
+Require Import Sorting.Permutation.
+  Lemma Permutation_Forall A (P: A -> Prop) l1 l2:
+    Forall P l1 ->
+    Permutation l1 l2 ->
+    Forall P l2.
+  Proof.
+    intros FA PERM.
+    rewrite Forall_forall in *.
+    intros. apply FA.
+    symmetry in PERM.
+    eapply Permutation_in; eauto.
+  Qed.
 
 (*
 Hint Extern 5 => solve_is_some: crunch.

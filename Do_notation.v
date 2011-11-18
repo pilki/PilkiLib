@@ -456,6 +456,65 @@ Proof.
   eauto with typeclass_instances.
 Defined.
 
+Inductive res (RES: Type) : Type :=
+| Err: String.string -> res RES
+| OK : RES -> res RES.
+Implicit Arguments OK [[RES]].
+Implicit Arguments Err [[RES]].
+
+
+Instance F_res: Functor res :=
+{ fmap:= fun _ _ f oa =>
+  match oa with
+    | Err e => Err e
+    | OK a => OK (f a)
+  end}.
+
+Instance Monad_res: Monad res :=
+{
+  Monad_Monadish := fun _ _ oa f =>
+    match oa with
+      | Err e => Err e
+      | OK a => f a
+    end;
+  Monad_Pointed := @OK
+}.
+
+Instance Monadish_res: Monadish res.
+Proof.
+  eauto with typeclass_instances.
+Defined.
+
+
+Lemma prog_do_monad_ok: forall A B (f: A -> res B) c,
+  blocked_do_bind f (OK c) = f c.
+Proof.
+  auto.
+Qed.
+
+Lemma prog_do_monad_err: forall A B (f: A -> res B) e,
+  blocked_do_bind f (Err e) = Err e.
+Proof.
+  auto.
+Qed.
+
+Lemma remove_ok: forall A (x y: A), OK x = OK y -r> x = y.
+Proof.
+  split; congruence. 
+Qed.
+Local Notation "¬ x" := (x -r> False) (at level 75, only parsing).
+
+Lemma OK_not_Err: forall `(a:A) e,
+  ¬OK a = Err e.
+Proof. intuition. inv H. Qed.
+
+Lemma Err_not_OK: forall `(a:A) e,
+  ¬Err e = OK a.
+Proof. intuition. inv H. Qed.
+
+Hint Rewrite prog_do_monad_err prog_do_monad_ok: simpl_do.
+
+Hint Rewrite remove_ok @OK_not_Err @Err_not_OK: clean.
 
 (* this should expect a monad, but because of the bug in 8.3, we split it *)
 Fixpoint mmap {M} {MON:Monad M} (*{PTD:Pointed M}*) {A B: Type} (f: A -> M B) (l: list A) : M (list B) :=
@@ -479,6 +538,17 @@ Proof.
   constructor; auto.
 Qed.
 
+  (* move to lib *)
+Lemma mmap_is_some {C D} (f: C -> option D) l:
+  list_forall (fun c => is_some (f c)) l ->
+  is_some (mmap f l).
+Proof.
+  induction' l as [|c l]; simpl; intro FORALL; auto.
+  Case "cons c l".
+  prog_dos; inv FORALL. exfalso; auto.
+  inv H1. congruence.
+Qed.
+
 Definition not_empty_mmap {M} {MON:Monad M} (*{PTD:Pointed M}*) {A B: Type} (f: A -> M B) (l: not_empty_list A)
   : M (not_empty_list B) :=
   let (hd, tl) := l in
@@ -496,6 +566,22 @@ Proof.
   induction l; simpl; auto.
   rewrite INV. rewrite IHl. simpl_do. auto.
 Qed.
+
+Definition not_empty_list_to_list X (nel: not_empty_list X): list X :=
+  let (hd, tl) := nel in hd :: tl.
+
+Global Coercion not_empty_list_to_list: not_empty_list >-> list.
+
+Lemma not_empty_mmap_is_some {C D} (f: C -> option D) (l: not_empty_list _):
+  list_forall (fun c => is_some (f c)) l ->
+  is_some (not_empty_mmap f l).
+Proof.
+  destruct l; simpl.
+  intro FORALL. inv FORALL.
+  inv H1. simpl_do.
+  pose proof (mmap_is_some _ H2). inv H. simpl_do. auto.
+Qed.
+
 
 
 Goal (
