@@ -567,6 +567,63 @@ Proof.
   rewrite INV. rewrite IHl. simpl_do. auto.
 Qed.
 
+Lemma mmap_ext M (MON:Monad M) A B (f g: A -> M B):
+  (forall a, f a = g a) -> forall l, 
+    mmap f l = mmap g l.
+Proof.
+  intros EQ l.
+  induction' l as [|a l].
+  Case "@nil".
+    auto.
+  Case "cons a l".
+    simpl.
+    rewrite EQ. rewrite IHl. reflexivity.
+Qed.
+
+Fixpoint mfold_left `{Monad M} {A B:Type} (f: A -> B -> M A) (l: list B) (a:A)
+  : M A :=
+  match l with
+  | [] => point a
+  | b :: l' =>
+    do a' <- f a b;
+    mfold_left f l' a'
+  end.
+
+
+  Fixpoint safe_map2 {A1 A2 B:Type} (f: A1 -> A2 -> B) l1 l2: option (list B):=
+    match l1, l2 with
+    | [], [] => Some []
+    | [], _
+    | _, [] => None
+    | a1 :: l1', a2 :: l2' =>
+      do l' <- safe_map2 f l1' l2';
+      Some ((f a1 a2) :: l')
+    end.
+
+  Lemma safe_map2_same_length {A1 A2 B:Type} (f: A1 -> A2 -> B) l1 l2:
+    is_some (safe_map2 f l1 l2) ->
+    length l1 = length l2.
+  Proof.
+    revert l2.
+    induction' l1 as [|a1 l1]; intros; destruct' l2 as [|a2 l2]; clean.
+    Case "cons a1 l1"; SCase "cons a2 l2".
+      simpl in *. prog_dos.
+  Qed.
+
+
+  Lemma same_length_safe_map2 {A1 A2 B:Type} (f: A1 -> A2 -> B) l1 l2:
+    length l1 = length l2 ->
+    safe_map2 f l1 l2 = Some (map2 f l1 l2).
+  Proof.
+    revert l2.
+    induction' l1 as [|a1 l1]; intros; destruct' l2 as [|a2 l2]; clean.
+    Case "cons a1 l1"; SCase "cons a2 l2".
+    simpl in H; inv H.
+    simpl. rewrite IHl1; auto.
+  Qed.
+
+
+
 Definition not_empty_list_to_list X (nel: not_empty_list X): list X :=
   let (hd, tl) := nel in hd :: tl.
 

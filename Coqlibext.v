@@ -21,6 +21,16 @@ Implicit Arguments snd [[A] [B]].*)
 Set Implicit Arguments.
 
 Ltac inv H := inversion H; try subst; try clear H.
+Tactic Notation "inv" hyp(H) "as" simple_intropattern(p) :=
+  inversion H as p; clear H; subst.
+Tactic Notation "inv" hyp(H) := inversion H; clear H; subst.
+
+
+Tactic Notation "remember_no_eq" constr(X) "as" ident(id) :=
+  remember X as id;
+  match goal with
+    | H: id = X |- _ => clear H
+  end.
 
 Definition Decidable (P:Prop) := {P} + {~P}.
 Hint Unfold Decidable: autounfold.
@@ -204,6 +214,15 @@ Next Obligation.
   apply list_forallb_list_forall with (f := f); auto.
   intros. destruct (f a); simpl in *; auto. inv H.
 Qed.
+
+Fixpoint map2 {A1 A2 B:Type} (f: A1 -> A2 -> B) (l1 : list A1) (l2 : list A2)
+  : list B :=
+  match l1,l2 with
+    | [], _
+    | _ , [] => []
+    | a1 :: l1', a2 :: l2' =>
+      (f a1 a2) :: map2 f l1' l2'
+  end.
 
 (* inverse a number of common pattern matching of options *)
 Ltac inv_opt :=
