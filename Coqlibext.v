@@ -110,9 +110,9 @@ Lemma list_forall_b_correct A (P : A -> Prop) (p: forall a, {P a}+{~P a}) l:
   list_forall_b p l = true <-> list_forall P l.
 Proof.
   induction' l as [|a l].
-  Case "@nil".
+  Case "nil".
     intuition.
-  Case "@cons a l".
+  Case "cons a l".
     destruct IHl.
     simpl; split; intro; destruct (p a); inv H1 ; auto using list_forall_cons.
 Qed.
@@ -174,9 +174,9 @@ Lemma list_forall_list_forallb: forall A f (P: A -> Prop) (l: list A),
 Proof.
   intros A f P l Ptrue LF.
   induction' l.
-  Case "@nil".
+  Case "nil".
     reflexivity.
-  Case "@cons".
+  Case "cons".
     inv LF.
     simpl. rewrite andb_true_iff. auto.
 Qed.
@@ -627,14 +627,14 @@ Fixpoint last `(l: list A) :=
 Lemma last_is_some `(l: list A): length l <> O -> is_some (last l).
 Proof.
   induction' l; intros NOTNIL; simpl in *; auto.
-  Case "@cons".
+  Case "cons".
   destruct l; auto.
 Qed.
 
 Lemma last_is_last `(l: list A) x: last l = Some x -> exists l', l = l' ++ [x].
 Proof.
   induction' l; simpl; intros; auto.
-  Case "@cons".
+  Case "cons".
   destruct l. clean.
   exists (@nil A); simpl. reflexivity.
   specialize (IHl H).
@@ -671,9 +671,9 @@ Proof.
     simpl. reflexivity.
   Case "S n'".
     destruct' l.
-    SCase "@nil".
+    SCase "nil".
       simpl. reflexivity.
-    SCase "@cons".
+    SCase "cons".
       simpl. congruence.
 Qed.
 
@@ -681,9 +681,9 @@ Lemma list_take_app: forall A (l1 l2: list A),
   list_take (length l1) (l1 ++ l2) = l1.
 Proof.
   induction' l1 as [|a l1']; intros.
-  Case "@nil".
+  Case "nil".
     reflexivity.
-  Case "@cons a l1'".
+  Case "cons a l1'".
     simpl. congruence.
 Qed.
 
@@ -692,9 +692,9 @@ Lemma list_drop_app: forall A (l1 l2: list A),
   list_drop (length l1) (l1 ++ l2) = l2.
 Proof.
   induction' l1 as [|a l1']; intros.
-  Case "@nil".
+  Case "nil".
     reflexivity.
-  Case "@cons a l1'".
+  Case "cons a l1'".
     simpl. congruence.
 Qed.
 

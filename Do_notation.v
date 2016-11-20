@@ -544,7 +544,7 @@ Lemma mmap_is_some {C D} (f: C -> option D) l:
   is_some (mmap f l).
 Proof.
   induction' l as [|c l]; simpl; intro FORALL; auto.
-  Case "@cons c l".
+  Case "cons c l".
   prog_dos; inv FORALL. exfalso; auto.
   inv H1. congruence.
 Qed.
@@ -573,9 +573,9 @@ Lemma mmap_ext M (MON:Monad M) A B (f g: A -> M B):
 Proof.
   intros EQ l.
   induction' l as [|a l].
-  Case "@nil".
+  Case "nil".
     auto.
-  Case "@cons a l".
+  Case "cons a l".
     simpl.
     rewrite EQ. rewrite IHl. reflexivity.
 Qed.
@@ -606,7 +606,7 @@ Fixpoint mfold_left `{Monad M} {A B:Type} (f: A -> B -> M A) (l: list B) (a:A)
   Proof.
     revert l2.
     induction' l1 as [|a1 l1]; intros; destruct' l2 as [|a2 l2]; clean.
-    Case "@cons a1 l1"; SCase "@cons a2 l2".
+    Case "cons a1 l1"; SCase "cons a2 l2".
       simpl in *. prog_dos.
   Qed.
 
@@ -617,7 +617,7 @@ Fixpoint mfold_left `{Monad M} {A B:Type} (f: A -> B -> M A) (l: list B) (a:A)
   Proof.
     revert l2.
     induction' l1 as [|a1 l1]; intros; destruct' l2 as [|a2 l2]; clean.
-    Case "@cons a1 l1"; SCase "@cons a2 l2".
+    Case "cons a1 l1"; SCase "cons a2 l2".
     simpl in H; inv H.
     simpl. rewrite IHl1; auto.
   Qed.
