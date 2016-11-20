@@ -112,7 +112,7 @@ Proof.
   induction' l as [|a l].
   Case "@nil".
     intuition.
-  Case "cons a l".
+  Case "@cons a l".
     destruct IHl.
     simpl; split; intro; destruct (p a); inv H1 ; auto using list_forall_cons.
 Qed.
@@ -176,7 +176,7 @@ Proof.
   induction' l.
   Case "@nil".
     reflexivity.
-  Case "cons".
+  Case "@cons".
     inv LF.
     simpl. rewrite andb_true_iff. auto.
 Qed.
@@ -272,7 +272,7 @@ Qed.
 
 Lemma ir_trans: forall A B C, (A -r> B) -> (B -r> C) -> (A -r> C).
 Proof.
-  intuition.
+  dintuition.
 Qed.
 
 Add Relation Prop imp_rewrite
@@ -282,8 +282,7 @@ Add Relation Prop imp_rewrite
 
 Instance imp_rewrite_sub: subrelation imp_rewrite impl.
 Proof.
-  compute.
-  intuition.
+  compute. dintuition.
 Qed.
 
 
@@ -301,12 +300,12 @@ Proof. intuition. Qed.
 (* is_some on a None is false *)
 Lemma is_some_None {A:Type}:
   is_some (@None A) -r> False.
-Proof. intuition. inversion H. Qed.
+Proof. dintuition. inversion H. Qed.
 
 
 Lemma remove_Some: forall A (a b:A), Some a = Some b -r> a = b.
 Proof.
-  intuition. inv H. reflexivity.
+  dintuition. inv H. reflexivity.
 Qed.
 Hint Rewrite @is_some_Some @is_some_None remove_Some: clean.
 
@@ -393,14 +392,14 @@ Lemma O_not_S: forall n, ¬O = S n.
 Proof. intuition. Qed.
 Lemma Some_not_None: forall `(a:A),
   ¬Some a = None.
-Proof. intuition. inv H. Qed.
+Proof. dintuition. inv H. Qed.
 Lemma None_not_Some: forall `(a:A),
   ¬None = Some a.
-Proof. intuition. inv H. Qed.
+Proof. dintuition. inv H. Qed.
 Lemma true_not_false : ¬true = false.
-Proof. intuition. Qed.
+Proof. dintuition. Qed.
 Lemma false_not_true: ¬false = true.
-Proof. intuition. Qed.
+Proof. dintuition. Qed.
 Lemma left_not_right: forall (A B:Prop) (a:A) (b:B),
   ¬left B a=right A b.
 Proof. intros. constructor. intro. inv H. Qed.
@@ -628,14 +627,14 @@ Fixpoint last `(l: list A) :=
 Lemma last_is_some `(l: list A): length l <> O -> is_some (last l).
 Proof.
   induction' l; intros NOTNIL; simpl in *; auto.
-  Case "cons".
+  Case "@cons".
   destruct l; auto.
 Qed.
 
 Lemma last_is_last `(l: list A) x: last l = Some x -> exists l', l = l' ++ [x].
 Proof.
   induction' l; simpl; intros; auto.
-  Case "cons".
+  Case "@cons".
   destruct l. clean.
   exists (@nil A); simpl. reflexivity.
   specialize (IHl H).
@@ -674,7 +673,7 @@ Proof.
     destruct' l.
     SCase "@nil".
       simpl. reflexivity.
-    SCase "cons".
+    SCase "@cons".
       simpl. congruence.
 Qed.
 
@@ -684,7 +683,7 @@ Proof.
   induction' l1 as [|a l1']; intros.
   Case "@nil".
     reflexivity.
-  Case "cons a l1'".
+  Case "@cons a l1'".
     simpl. congruence.
 Qed.
 
@@ -695,7 +694,7 @@ Proof.
   induction' l1 as [|a l1']; intros.
   Case "@nil".
     reflexivity.
-  Case "cons a l1'".
+  Case "@cons a l1'".
     simpl. congruence.
 Qed.
 

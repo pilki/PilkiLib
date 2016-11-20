@@ -11,6 +11,7 @@ Require Import Integers.
 Set Implicit Arguments.
 
 Require Import RelationClasses.
+Require Import Coq.Relations.Relation_Definitions.
 
 (* classe for inhabited types *)
 

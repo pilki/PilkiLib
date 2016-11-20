@@ -506,11 +506,11 @@ Local Notation "¬ x" := (x -r> False) (at level 75, only parsing).
 
 Lemma OK_not_Err: forall `(a:A) e,
   ¬OK a = Err e.
-Proof. intuition. inv H. Qed.
+Proof. dintuition. inv H. Qed.
 
 Lemma Err_not_OK: forall `(a:A) e,
   ¬Err e = OK a.
-Proof. intuition. inv H. Qed.
+Proof. dintuition. inv H. Qed.
 
 Hint Rewrite prog_do_monad_err prog_do_monad_ok: simpl_do.
 
@@ -544,7 +544,7 @@ Lemma mmap_is_some {C D} (f: C -> option D) l:
   is_some (mmap f l).
 Proof.
   induction' l as [|c l]; simpl; intro FORALL; auto.
-  Case "cons c l".
+  Case "@cons c l".
   prog_dos; inv FORALL. exfalso; auto.
   inv H1. congruence.
 Qed.
@@ -575,7 +575,7 @@ Proof.
   induction' l as [|a l].
   Case "@nil".
     auto.
-  Case "cons a l".
+  Case "@cons a l".
     simpl.
     rewrite EQ. rewrite IHl. reflexivity.
 Qed.
@@ -606,7 +606,7 @@ Fixpoint mfold_left `{Monad M} {A B:Type} (f: A -> B -> M A) (l: list B) (a:A)
   Proof.
     revert l2.
     induction' l1 as [|a1 l1]; intros; destruct' l2 as [|a2 l2]; clean.
-    Case "cons a1 l1"; SCase "cons a2 l2".
+    Case "@cons a1 l1"; SCase "@cons a2 l2".
       simpl in *. prog_dos.
   Qed.
 
@@ -617,7 +617,7 @@ Fixpoint mfold_left `{Monad M} {A B:Type} (f: A -> B -> M A) (l: list B) (a:A)
   Proof.
     revert l2.
     induction' l1 as [|a1 l1]; intros; destruct' l2 as [|a2 l2]; clean.
-    Case "cons a1 l1"; SCase "cons a2 l2".
+    Case "@cons a1 l1"; SCase "@cons a2 l2".
     simpl in H; inv H.
     simpl. rewrite IHl1; auto.
   Qed.

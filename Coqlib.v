@@ -181,9 +181,9 @@ Definition plt (x y: positive) : {Plt x y} + {~ Plt x y}.
 Proof.
  intros.
  case_eq (Pcompare x y Eq); intro COMP.
- right. unfold Plt; unfold Zlt; simpl; congruence.
- left.  unfold Plt; unfold Zlt; simpl; congruence.
- right. unfold Plt; unfold Zlt; simpl; congruence.
+ right. unfold Plt; unfold Zlt; compute in *; congruence.
+ left.  unfold Plt; unfold Zlt; compute in *; congruence.
+ right. unfold Plt; unfold Zlt; compute in *; congruence.
 Qed.
 
 
@@ -420,7 +420,7 @@ Lemma Zmin_spec:
   forall x y, Zmin x y = if zlt x y then x else y.
 Proof.
   intros. case (zlt x y); unfold Zlt, Zge; intros.
-  unfold Zmin. rewrite z. auto.
+  unfold Zmin. rewrite l. auto.
   unfold Zmin. caseEq (x ?= y); intro. 
   apply Zcompare_Eq_eq. auto.
   contradiction.
@@ -432,7 +432,7 @@ Lemma Zmax_spec:
 Proof.
   intros. case (zlt y x); unfold Zlt, Zge; intros.
   unfold Zmax. rewrite <- (Zcompare_antisym y x).
-  rewrite z. simpl. auto.
+  rewrite l. simpl. auto.
   unfold Zmax. rewrite <- (Zcompare_antisym y x).
   caseEq (y ?= x); intro; simpl.
   symmetry. apply Zcompare_Eq_eq. auto.
@@ -591,7 +591,7 @@ Qed.
 Lemma Zdivides_trans:
   forall x y z, (x | y) -> (y | z) -> (x | z).
 Proof.
-  intros. inv H. inv H0. exists (q0 * q). ring.
+  intros. inv H. inv H0. exists (x1 * x0). ring.
 Qed.
 
 Definition Zdivide_dec:

@@ -2,10 +2,10 @@ DIRS=.
 
 INCLUDES=$(patsubst %,-I %, $(DIRS))
 
-COQLIBS:=-I ~/devel/cases/src -R ~/devel/cases/theories Case_Tactics
+COQLIBS:=-I ~/gitrepos/cases/src -R ~/gitrepos/cases/theories Case_Tactics
 
 COQC=coqc -q $(INCLUDES) $(COQLIBS)
-COQDEP=coqdep $(INCLUDES) $(COQLIBS)
+COQDEP=coqdep $(COQLIBS)
 COQDOC=coqdoc
 COQEXEC=coqtop $(INCLUDES) -batch -load-vernac-source
 
